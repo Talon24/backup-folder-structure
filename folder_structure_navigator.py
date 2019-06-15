@@ -23,7 +23,7 @@ class OutOfStructureException(Exception):
 
 
 class JsonTraverser():
-    """Navigate through the object"""
+    """Navigate through the object."""
     def __init__(self, data):
         self.data = data
         # self.position = list(data.keys())
@@ -33,7 +33,7 @@ class JsonTraverser():
         # pprint(self.position)
 
     def up(self):  # pylint: disable=invalid-name
-        """go up"""
+        """Go to the parent directory."""
         if not self.position:
             raise OutOfStructureException
         self.position.pop()
@@ -44,7 +44,7 @@ class JsonTraverser():
         return self
 
     def down(self, name):
-        """go down"""
+        """Go to the specified child directory."""
         name = self.clear_name(name)
         try:
             self.current = self.current[name]
@@ -54,7 +54,7 @@ class JsonTraverser():
             raise FileNotFoundError
 
     def folders(self):
-        """get the folders"""
+        """Get the folders in the current folder."""
         folders = list(self.current.keys())
         try:
             folders.remove("__/files")
@@ -63,23 +63,23 @@ class JsonTraverser():
         return folders
 
     def files(self):
-        """get the files"""
+        """Get the files in the current folder."""
         try:
             return self.current["__/files"]
         except KeyError:
             return []  # Root dir
 
     def content(self):
-        """Get everything in current folder"""
+        """Get everything in current folder."""
         return self.folders() + self.files()
 
     def content_nice(self):
-        """Formatted content"""
+        """Folder content with indictor Emoji."""
         return (["\ud83d\udcc1 " + folder for folder in self.folders()] +
                 ["\ud83d\udcdd " + file for file in self.files()])
 
     def current_folder_info(self):
-        """return how many folders and how many files"""
+        """Return how many folders and how many files in the current folder."""
         return len(self.folders()), len(self.files())
 
     def current_path(self):
@@ -87,11 +87,11 @@ class JsonTraverser():
         # print(self.position)
         return os.sep.join([i.replace(os.sep, "") for i in self.position])
 
-    def subdir_info(self, name):
+    def subdir_info(self, name, current_directory=False):
         """Count subfolders and files."""
         name = self.clear_name(name)
         folders_n = files_n = size = 0
-        if name == "..":
+        if current_directory:
             structure = self.current
         else:
             structure = self.current[name]
@@ -174,6 +174,8 @@ class App(tk.Tk):
 
     def init_data(self, name):
         """Load data"""
+        if not name:
+            return
         self.status["text"] = "Parsing file..."
         self.status.update()
         with open(name, "r") as file:
@@ -195,19 +197,26 @@ class App(tk.Tk):
         listbox = tk.Listbox(frame, width=40, yscrollcommand=scrollbar.set)
         scrollbar.config(command=listbox.yview)
         listbox.configure(exportselection=False)
+        # listbox.config(font=("TkDefaultFont", "19"))
+        # default_font = font.nametofont("TkDefaultFont")
+        # default_font.configure(size=16)
+        # listbox.option_add("*Font", default_font)
 
-        status = tk.Label(self, text="Hallo", bd=1, relief=tk.SUNKEN,
+        status = tk.Label(self, text="Please open a Structure file.",
+                          bd=2, relief=tk.SUNKEN,
                           justify="left", anchor="w")
         status.grid(row=100, columnspan=2, sticky="news")
         self.status = status
 
-        def catchfunction(event):
-            """stuff"""
+        def double_click_function(event):
+            """Determine if genuine double click, if not,
+            simulate single-click, else enter selected directory."""
             try:
                 current = self.current_val()
             except KeyError:
                 index = self.listbox.index("@{},{}".format(event.x, event.y))
-                current = self.listbox.get(index)
+                self.listbox.select_set(index)
+                return
             # print(current.encode("utf-8", "ignore").decode())
             if current != "..":
                 self.down(current)
@@ -215,18 +224,21 @@ class App(tk.Tk):
                 self.up()
 
         def select_function(_):
-            """called when entry is selected"""
-            self.update_infobox()
-            return self.current_val()
+            """Called when entry is selected"""
+            try:
+                self.update_infobox()
+            except KeyError:
+                pass
+            # return self.current_val()
         listbox.bind("<<ListboxSelect>>", select_function)
-        listbox.bind('<Double-Button-1>', catchfunction)
+        listbox.bind('<Double-Button-1>', double_click_function)
         listbox.grid(row=0, column=0, sticky="NEWS")
-        listbox.popup_menu = tk.Menu(listbox, tearoff=0)
-        listbox.popup_menu.add_command(
-            label="Delete", command=lambda x: print("Delete"))
-        listbox.popup_menu.add_command(
-            label="Select All", command=lambda x: print("Select"))
-        listbox.bind("<Button-3>", lambda x: self.popup(listbox, x))
+        # listbox.popup_menu = tk.Menu(listbox, tearoff=0)
+        # listbox.popup_menu.add_command(
+        #     label="Delete", command=lambda x: print("Delete"))
+        # listbox.popup_menu.add_command(
+        #     label="Select All", command=lambda x: print("Select"))
+        # listbox.bind("<Button-3>", lambda x: self.popup(listbox, x))
         self.listbox = listbox
         # self.update_()
         # listbox.select_set(0)
@@ -249,9 +261,10 @@ class App(tk.Tk):
             self.init_data(filename)
         menu = tk.Menu(self)
         self.config(menu=menu)
-        file_menu = tk.Menu(menu)
-        menu.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Open...", command=select_file)
+        # file_menu = tk.Menu(menu)
+        # menu.add_cascade(label="File", menu=file_menu)
+        # file_menu.add_command(label="Open...", command=select_file)
+        menu.add_command(label="Open...", command=select_file)
 
     def update_(self):
         """Call all update functions"""
@@ -273,14 +286,14 @@ class App(tk.Tk):
             *self.traverser.current_folder_info(), self.traverser.current_path())
 
     def update_infobox(self):
-        """Write Infos to the infobox"""
+        """Write Infos to the infobox."""
         try:
             selection = self.current_val()
         except IndexError:
             return
         if self.traverser.is_folder(selection):
             text = "Subfolders:\n{}\n\nSubfiles:\n{}\n\nSize:\n{}".format(
-                *self.traverser.subdir_info(selection))
+                *self.traverser.subdir_info(selection, selection == ".."))
             self.infobox["text"] = text
         else:
             text = ("Size:\n{}\n\nCreated:\n{}\n\n"
@@ -289,15 +302,15 @@ class App(tk.Tk):
             self.infobox["text"] = text
 
     @staticmethod
-    def popup(savegame_box, event):
+    def popup(element, event):
         """Put a popup."""
         try:
-            savegame_box.popup_menu.tk_popup(event.x_root, event.y_root, 0)
+            element.popup_menu.tk_popup(event.x_root, event.y_root, 0)
         finally:
-            savegame_box.popup_menu.grab_release()
+            element.popup_menu.grab_release()
 
     def current_val(self):
-        """current value"""
+        """Get the currently selected value. Exception if nothing selected."""
         try:
             return self.listbox.get(self.listbox.curselection()[0])
         except IndexError:
