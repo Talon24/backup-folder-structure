@@ -6,11 +6,16 @@ Even if the device is working alright, it might be useful to have a snapshot of 
 
 For this purpose, I wrote this program.
 ## Content
-### Folder Structure Backup
-This program takes a path and walks though every child directory and files. It writes the output into a .json file. The Folder name will be the key and the child directories the values. Every layer as a key "\_\_/files" which contains the files in the current directory.
-
-As default, the program saves size, modification, creation and last access date for every file. This can be disabled, which results in a smaller file size, hence faster parsing when processing said file.
 
 ### Folder Structure Navigator
 
-This program provides an Exporer-like graphical user interface to navigate though the .json file.
+This program provides an Exporer-like graphical user interface to navigate though the json file.
+
+
+
+### Folder Structure Backup
+This program is used by the Navigator, though it can be called by the command line as well e.g. for automatic generation.
+
+This program takes a path and walks though every child directory and files. It writes the output into a .json file. The Folder name will be the key and the child directories the values. Every layer as a key "\_\_/files" which contains the files in the current directory.
+
+As default, the program saves size, modification, creation and last access date for every file. This can be disabled, which results in a smaller file size, hence faster parsing when processing said file.

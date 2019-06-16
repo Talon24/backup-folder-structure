@@ -2,11 +2,17 @@
 
 import os
 import json
+import time
 import datetime
+import threading
 import tkinter as tk
 from tkinter import font
 from tkinter import filedialog
+from tkinter import messagebox
+from tkinter.ttk import Progressbar
 # from pprint import pprint
+
+import folder_structure_backup
 
 
 def sizeof_fmt(num, suffix='B'):
@@ -256,8 +262,9 @@ class App(tk.Tk):
             """Show file explorer to select json file"""
             filename = filedialog.askopenfilename(
                 initialdir=os.getcwd(), title="Select Backup file...",
-                filetypes=(("Text files", "*.txt"),
-                           ("JSON files", "*.json")))
+                filetypes=(("JSON Files", "*.json"),
+                           ("Text Files", "*.txt"),
+                           ("All Files", "*.*")))
             self.init_data(filename)
         menu = tk.Menu(self)
         self.config(menu=menu)
@@ -266,9 +273,18 @@ class App(tk.Tk):
         # file_menu.add_command(label="Open...", command=select_file)
         menu.add_command(label="Open...", command=select_file)
 
+        def show_submenu():
+            subwindow = NewSnapshotScreen(self)
+            subwindow.mainloop()
+            if subwindow.finished:
+                self.init_data(subwindow.target_file.get())
+
+        menu.add_command(label="New Snapshot...", command=show_submenu)
+
     def update_(self):
         """Call all update functions"""
         self.update_listbox()
+        self.update_infobox()
         self.update_statusbar()
 
     def update_listbox(self):
@@ -279,9 +295,7 @@ class App(tk.Tk):
             self.listbox.insert(tk.END, item)
 
     def update_statusbar(self):
-        """statusbar update"""
-        # print("Hi")
-        # print(self.traverser.current_path())
+        """Statusbar update"""
         self.status["text"] = "{} Ordner, {} Dateien\n{}".format(
             *self.traverser.current_folder_info(), self.traverser.current_path())
 
@@ -289,6 +303,8 @@ class App(tk.Tk):
         """Write Infos to the infobox."""
         try:
             selection = self.current_val()
+        except KeyError:
+            return
         except IndexError:
             return
         if self.traverser.is_folder(selection):
@@ -332,6 +348,84 @@ class App(tk.Tk):
             self.update_()
         except FileNotFoundError:
             pass
+
+
+class NewSnapshotScreen(tk.Toplevel):
+    """Window to select and Path to analyze and start generation."""
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.transient(parent)
+        self.target_path = tk.StringVar()
+        self.target_file = tk.StringVar()
+        self.fastmode = tk.IntVar()
+        self.finished = False
+        label = tk.Label(self, text="Snapshot path")
+        label.grid(row=0, column=0)
+        label = tk.Label(self, text="Outut file path")
+        label.grid(row=1, column=0)
+        self.snap_path_box = tk.Entry(self, state="readonly", width=50,
+                                      textvariable=self.target_path)
+        self.target_file_box = tk.Entry(self, state="readonly", width=50,
+                                        textvariable=self.target_file)
+        self.snap_path_box.grid(row=0, column=1, sticky="NEWS")
+        self.target_file_box.grid(row=1, column=1, sticky="NEWS")
+        tk.Button(
+            self, text="Set path...", command=self.select_snap_path).grid(
+                row=0, column=2, sticky="NEWS")
+        tk.Button(
+            self, text="Set file...", command=self.select_target_file).grid(
+                row=1, column=2, sticky="NEWS")
+        tk.Checkbutton(
+            self, text="Less detailed, fast mode",
+            variable=self.fastmode).grid(row=2, column=0, columnspan=3)
+        tk.Button(
+            self, text="Start backup generation",
+            command=self.generate).grid(row=3, column=0, columnspan=3)
+        tk.Grid.columnconfigure(self, 1, weight=1)
+        progress = Progressbar(self, orient=tk.HORIZONTAL, mode='indeterminate')
+        self.progress = progress
+
+    def select_snap_path(self):
+        """Show the Menu for folder selection and save selection."""
+        self.target_path.set(filedialog.askdirectory(
+            initialdir=os.getcwd(), title="Select Snapshot Root...",))
+        self.snap_path_box.delete(0, tk.END)
+        self.snap_path_box.insert(0, self.target_path.get())
+        self.snap_path_box.update()
+
+    def select_target_file(self):
+        """Show the Menu for target file selection and save selection."""
+        self.target_file.set(filedialog.asksaveasfilename(
+            initialdir=os.getcwd(), title="Output file", defaultextension=".json",
+            filetypes=(("JSON File", "*.json"),
+                       ("Text File", "*.txt"),
+                       ("All Files", "*.*"))))
+        self.target_file_box.delete(0, tk.END)
+        self.target_file_box.insert(0, self.target_file.get())
+        self.target_file_box.update()
+
+    def generate(self):
+        """Launch file generation as alternative to run in cmd."""
+        if self.target_path == "" or self.target_file == "":
+            messagebox.showerror("At least one path was not specified.")
+            return
+        self.progress.grid(row=100, columnspan=3, sticky="ews")
+        self.update()
+        thread = threading.Thread(
+            target=folder_structure_backup.iterate_and_save,
+            args=(self.target_path.get(), self.target_file.get(),
+                  "big" if not self.fastmode.get() else "fast"))
+        thread.daemon = True
+        thread.start()
+        while thread.is_alive():
+            self.progress.step(amount=2)
+            self.progress.update()
+            self.update()
+            time.sleep(0.1)
+        self.progress.grid_forget()
+        self.finished = True
+        self.destroy()
+        self.quit()
 
 
 def main():

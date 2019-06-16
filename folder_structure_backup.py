@@ -38,16 +38,9 @@ def main2():
                 # sys.exit()
 
 
-def main():
-    """Output neat json"""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--path", help="Path of root")
-    parser.add_argument("-m", "--mode", help="Generation mode. 'Fast' does "
-                        "not include file size e.g. and will result "
-                        "in a smaller file", choices=["fast", "big"],
-                        default="big")
-    arguments = parser.parse_args()
-    path = arguments.path
+def iterate_path(target_path, mode):
+    """Walk through the given path and return subfolder / file information."""
+    path = target_path
     # path = pathlib.Path("E:\\")
     minlength = len(pathlib.Path(next(os.walk(path))[0]).parts)
     # output = entry(path.name, "folder")
@@ -60,23 +53,47 @@ def main():
             if layer not in cur_level:
                 cur_level[layer] = {}
             cur_level = cur_level[layer]
-        if arguments.mode == "fast":
-            cur_level["__/files"] = files
-        else:
-            cur_level["__/files"] = {}
-            for file in files:
-                stats = os.stat(pathlib.Path(current) / file)
-                cur_level["__/files"][file] = {
-                    "size": stats.st_size,
-                    "modified": stats.st_mtime,
-                    "created": stats.st_mtime,
-                    "accessed": stats.st_atime
-                }
+        try:
+            if mode == "fast":
+                cur_level["__/files"] = files
+            else:
+                cur_level["__/files"] = {}
+                for file in files:
+                    stats = os.stat(pathlib.Path(current) / file)
+                    cur_level["__/files"][file] = {
+                        "size": stats.st_size,
+                        "modified": stats.st_mtime,
+                        "created": stats.st_mtime,
+                        "accessed": stats.st_atime
+                    }
+        except OSError:
+            pass
+    return output
 
-    # pprint.pprint(output)
-    # print(json.dumps(output, indent=4))
-    with open("file system structure4.txt", "w") as file:
-        file.write(json.dumps(output, indent=4))
+
+def save(dictionary, output_filename):
+    """Write the given dictionary to a file."""
+    with open(output_filename, "w") as file:
+        file.write(json.dumps(dictionary, indent=4))
+
+
+def iterate_and_save(target_path, target_filename, mode="big"):
+    """Combine Generation and saving as easier interface."""
+    dictionary = iterate_path(target_path, mode)
+    save(dictionary, target_filename)
+
+
+def main():
+    """Output neat json"""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--path", help="Path of root")
+    parser.add_argument("-m", "--mode", help="Generation mode. 'Fast' does "
+                        "not include file size e.g. and will result "
+                        "in a smaller file", choices=["fast", "big"],
+                        default="big")
+    arguments = parser.parse_args()
+    dictionary = iterate_path(arguments.path, arguments.mode)
+    save(dictionary, "file system structure4.txt")
 
 
 if __name__ == '__main__':
