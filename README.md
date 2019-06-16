@@ -19,3 +19,8 @@ This program is used by the Navigator, though it can be called by the command li
 This program takes a path and walks though every child directory and files. It writes the output into a .json file. The Folder name will be the key and the child directories the values. Every layer as a key "\_\_/files" which contains the files in the current directory.
 
 As default, the program saves size, modification, creation and last access date for every file. This can be disabled, which results in a smaller file size, hence faster parsing when processing said file.
+
+## Note
+No additional libraries are used in this project, it can be started using out-of-the-box Python3. (Except if your distribution does not include tkinter natively. On windows this should be given, on Linux, it can be installed by e.g. `sudo apt-get install python3-tk`).
+
+If you find a bug or a missing feature, feel free to open an issue or drop me a note if you like this.
