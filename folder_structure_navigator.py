@@ -387,27 +387,38 @@ class NewSnapshotScreen(tk.Toplevel):
 
     def select_snap_path(self):
         """Show the Menu for folder selection and save selection."""
-        self.target_path.set(filedialog.askdirectory(
-            initialdir=os.getcwd(), title="Select Snapshot Root...",))
+        default = os.getcwd()
+        if self.target_path.get():
+            default = self.target_path.get()
+        target_path = filedialog.askdirectory(
+            initialdir=default, title="Select Snapshot Root...",)
+        if target_path:
+            self.target_path.set(target_path)
         self.snap_path_box.delete(0, tk.END)
         self.snap_path_box.insert(0, self.target_path.get())
         self.snap_path_box.update()
 
     def select_target_file(self):
         """Show the Menu for target file selection and save selection."""
-        self.target_file.set(filedialog.asksaveasfilename(
-            initialdir=os.getcwd(), title="Output file", defaultextension=".json",
+        default = os.getcwd()
+        if self.target_file.get():
+            default = self.target_file.get()
+        target_file = filedialog.asksaveasfilename(
+            initialdir=default, title="Output file", defaultextension=".json",
             filetypes=(("JSON File", "*.json"),
                        ("Text File", "*.txt"),
-                       ("All Files", "*.*"))))
+                       ("All Files", "*.*")))
+        if target_file:
+            self.target_file.set(target_file)
         self.target_file_box.delete(0, tk.END)
         self.target_file_box.insert(0, self.target_file.get())
         self.target_file_box.update()
 
     def generate(self):
         """Launch file generation as alternative to run in cmd."""
-        if self.target_path == "" or self.target_file == "":
-            messagebox.showerror("At least one path was not specified.")
+        if not (os.path.exists(self.target_path.get()) and self.target_file.get()):
+            messagebox.showerror("Invalid Arguments",
+                                 "At least one path was not valid.")
             return
         self.progress.grid(row=100, columnspan=3, sticky="ews")
         self.update()
