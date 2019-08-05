@@ -70,10 +70,7 @@ class JsonTraverser():
 
     def files(self):
         """Get the files in the current folder."""
-        try:
-            return self.current["__/files"]
-        except KeyError:
-            return []  # Root dir
+        return self.current.get("__/files", [])
 
     def content(self):
         """Get everything in current folder."""
@@ -132,21 +129,14 @@ class JsonTraverser():
     # @staticmethod
     def walk(self, structure):
         """Recursively walk the structure."""
-        # print("started")
-        files = structure["__/files"]
-        # print(structure.keys())
-        # print(list(structure.keys()).remove("__/files"))
-        # folders = list(structure.keys()).remove("__/files")
+        files = structure.get("__/files", [])
         folders = list(structure.keys())
-        folders.remove("__/files")
-        # print(folders)
+        if files:
+            folders.remove("__/files")
         yield folders, files
         if folders is None:
             folders = []
-        # print(folders, files)
         for folder in folders:
-            # print("entering", folder)
-            # print(structure[folder].keys())
             yield from self.walk(structure[folder])
 
     @staticmethod
