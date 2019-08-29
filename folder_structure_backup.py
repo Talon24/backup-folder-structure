@@ -53,26 +53,26 @@ def iterate_path(target_path, mode):
             if layer not in cur_level:
                 cur_level[layer] = {}
             cur_level = cur_level[layer]
-            if mode == "fast":
-                cur_level["__/files"] = files
-            else:
-                cur_level["__/files"] = {}
-                for file in files:
-                    try:
-                        stats = os.stat(pathlib.Path(current) / file)
-                        cur_level["__/files"][file] = {
-                            "size": stats.st_size,
-                            "modified": stats.st_mtime,
-                            "created": stats.st_mtime,
-                            "accessed": stats.st_atime
-                        }
-                    except OSError:  # File cannot be accessed
-                        cur_level["__/files"][file] = {
-                            "size": 0,
-                            "modified": 0,
-                            "created": 0,
-                            "accessed": 0
-                        }
+        if mode == "fast":
+            cur_level["__/files"] = files
+        else:
+            cur_level["__/files"] = {}
+            for file in files:
+                try:
+                    stats = os.stat(pathlib.Path(current) / file)
+                    cur_level["__/files"][file] = {
+                        "size": stats.st_size,
+                        "modified": stats.st_mtime,
+                        "created": stats.st_mtime,
+                        "accessed": stats.st_atime
+                    }
+                except OSError:  # File cannot be accessed
+                    cur_level["__/files"][file] = {
+                        "size": 0,
+                        "modified": 0,
+                        "created": 0,
+                        "accessed": 0
+                    }
     return output
 
 
