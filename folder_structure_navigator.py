@@ -69,6 +69,14 @@ class App(tk.Tk):
         status.grid(row=100, columnspan=2, sticky="news")
         self.status = status
 
+        def enter_function(_):
+            """Action to enter a folder or move up."""
+            current = self.current_val()
+            if current != "..":
+                self.down(current)
+            else:
+                self.up()
+
         def double_click_function(event):
             """Determine if genuine double click, if not,
             simulate single-click, else enter selected directory."""
@@ -93,6 +101,8 @@ class App(tk.Tk):
             # return self.current_val()
         listbox.bind("<<ListboxSelect>>", select_function)
         listbox.bind('<Double-Button-1>', double_click_function)
+        listbox.bind("<Return>", enter_function)
+        listbox.bind("<BackSpace>", lambda _: self.up())
         listbox.grid(row=0, column=0, sticky="NEWS")
         # listbox.popup_menu = tk.Menu(listbox, tearoff=0)
         # listbox.popup_menu.add_command(
@@ -141,6 +151,8 @@ class App(tk.Tk):
         self.update_listbox()
         self.update_infobox()
         self.update_statusbar()
+        self.listbox.select_set(0)
+        self.listbox.focus_set()
 
     def update_listbox(self):
         """Clear and refresh listbox"""
