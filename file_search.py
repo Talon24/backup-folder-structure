@@ -13,7 +13,8 @@ from folder_structure_navigator import JsonTraverser
 def path_format(hierarchy, file):
     """format readable"""
     root = hierarchy[0]
-    return f"{root}{os.sep.join(hierarchy[1:])}{os.sep}{file}"
+    path = os.sep.join(hierarchy[1:])
+    return os.path.join(root, path, file)
 
 
 def search_recursive(traverser, searchstring, files=True, folders=True):
@@ -46,7 +47,7 @@ def search_from_file(path, searchstring, files=True, folders=True):
 def main():
     """Interactive searcher. Load file only once, search many times."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("file", help="Source json file", nargs="?")
+    parser.add_argument("file", help="Source json file")
     parser.add_argument("-s", "--search", help="Search string to find")
     arguments = parser.parse_args()
     print("Loading file...")

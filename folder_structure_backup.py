@@ -91,14 +91,15 @@ def iterate_and_save(target_path, target_filename, mode="big"):
 def main():
     """Output neat json"""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--path", help="Path of root")
+    parser.add_argument("-p", "--path", help="Path of root", required=True)
+    parser.add_argument("-f", "--file", help="Target file name.", required=True)
     parser.add_argument("-m", "--mode", help="Generation mode. 'Fast' does "
                         "not include file size e.g. and will result "
                         "in a smaller file", choices=["fast", "big"],
                         default="big")
     arguments = parser.parse_args()
     dictionary = iterate_path(arguments.path, arguments.mode)
-    save(dictionary, "file system structure4.txt")
+    save(dictionary, arguments.file)
 
 
 if __name__ == '__main__':
