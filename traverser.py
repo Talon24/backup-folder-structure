@@ -130,11 +130,9 @@ class JsonTraverser():
             files = structure.get("__/files", {})
         except AttributeError:  # root element is list
             files = {}
-        try:
-            structure.pop("__/files", None)
-            folders = list(structure.keys())
-        except AttributeError:
-            folders = structure()
+        folders = list(structure.keys())
+        if "__/files" in folders:
+            folders.remove("__/files")
         yield folders, files
         if folders is None:
             folders = []
