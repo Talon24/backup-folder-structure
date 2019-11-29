@@ -4,6 +4,10 @@
 import os
 import datetime
 import json
+import unicodedata
+
+FOLDER = unicodedata.lookup("FILE FOLDER")
+FILE = unicodedata.lookup("PAGE FACING UP")
 
 
 def sizeof_fmt(num, suffix='B'):
@@ -75,8 +79,9 @@ class JsonTraverser():
 
     def content_nice(self):
         """Folder content with indictor Emoji."""
-        return (["\ud83d\udcc1 " + folder for folder in self.folders()] +
-                ["\ud83d\udcdd " + file for file in self.files()])
+
+        return ([FOLDER + " " + folder for folder in self.folders()] +
+                [FILE + " " + file for file in self.files()])
 
     def current_folder_info(self):
         """Return how many folders and how many files in the current folder."""
@@ -142,8 +147,8 @@ class JsonTraverser():
     @staticmethod
     def clear_name(name):
         """Remove Indicator emoji if present"""
-        if name.startswith("\ud83d\udcdd") or name.startswith("\ud83d\udcc1"):
-            name = name[3:]
+        if name.startswith(FOLDER) or name.startswith(FILE):
+            name = name.split(" ", maxsplit=1)[1]
         return name
 
     def is_folder(self, name):
