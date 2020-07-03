@@ -213,7 +213,7 @@ class App(tk.Tk):
         try:
             self.traverser.down(name)
             self.update_()
-        except FileNotFoundError:
+        except OutOfStructureException:
             pass
 
 

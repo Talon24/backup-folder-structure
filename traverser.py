@@ -57,8 +57,8 @@ class JsonTraverser():
             self.current = self.current[name]
             self.position.append(name)
             return self
-        except KeyError:
-            raise FileNotFoundError
+        except KeyError as exc:
+            raise OutOfStructureException from exc
 
     def folders(self):
         """Get the folders in the current folder."""

@@ -60,8 +60,13 @@ def iterate_path(target_path, mode):
             for file in files:
                 try:
                     stats = os.stat(pathlib.Path(current) / file)
+                    if stats.st_size < (1024 ** 4) * 10:
+                        size = stats.st_size
+                    else:
+                        # Larger than 10 TB? sure u did.
+                        size = 0
                     cur_level["__/files"][file] = {
-                        "size": stats.st_size,
+                        "size": size,
                         "modified": stats.st_mtime,
                         "created": stats.st_mtime,
                         "accessed": stats.st_atime
@@ -79,7 +84,7 @@ def iterate_path(target_path, mode):
 def save(dictionary, output_filename):
     """Write the given dictionary to a file."""
     with open(output_filename, "w") as file:
-        file.write(json.dumps(dictionary, indent=4))
+        json.dump(dictionary, file)
 
 
 def iterate_and_save(target_path, target_filename, mode="big"):
