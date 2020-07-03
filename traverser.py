@@ -80,8 +80,8 @@ class JsonTraverser():
     def content_nice(self):
         """Folder content with indictor Emoji."""
 
-        return ([FOLDER + " " + folder for folder in self.folders()] +
-                [FILE + " " + file for file in self.files()])
+        return (sorted([FOLDER + " " + folder for folder in self.folders()]) +
+                sorted([FILE + " " + file for file in self.files()]))
 
     def current_folder_info(self):
         """Return how many folders and how many files in the current folder."""
